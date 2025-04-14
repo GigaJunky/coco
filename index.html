@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>CocoCas2Wav.js</title>
+        <style>
+            @import url('https://fonts.cdnfonts.com/css/color-basic');
+            
+            html { font-family: 'Color Basic', sans-serif; font-size: 16px; background: black; color: black }
+            body { background: #95DB54; padding: 0 20px; width: 90%; margin: 0 auto }
+            audio { width: 90% }
+            button, audio, select, input[type="file"]::file-selector-button {
+                background-color:  black; color: white;
+                border: none; border-radius: 4px; padding: 15px 32px; text-align: center;
+                text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px;
+                cursor: pointer; opacity: 0.6; transition: 0.3s;
+            }
+            li { font-family: monospace;}
+
+            button:hover, input[type="file"]::file-selector-button:hover {opacity: 1}
+
+        </style>
+    </head>
+<body>
+    <h2>COCOCAS2WAV.JS</h2>
+    <div>By BitJunky</div>
+    <div>
+        <audio id="Audio" controls=""></audio>
+
+        <select id="selZFiles" size="10" style="width: 600px; display: none"></select>
+        <select id="selDFiles" size="10" style="width: 600px; display: none"></select>
+        <p>CHECKSUMS SHA-1</p>
+
+        <div>
+        <label for="FileCS">FILE:</label>
+        <span id="FileCS"></span>
+        </div>
+        <div>
+        <label for="CasCS">CAS:</label>
+        <span id="CasCS"></span>
+        </div>
+        <div>
+        <label for="WavCS">WAV:</label>
+        <span id="WavCS"></span>
+        </div>
+        <input type="file" accept=".p,.cas,.dsk,.zip" id="file-input">
+        <button id="btnSaveWav">Save .wav</button>
+        <button id="btnSaveCas">Save .cas</button>
+        <br>
+        <textarea  spellcheck="false" style="width: 100%;" rows="10" cols="40" id="taBas"></textarea>
+        
+
+        <ul>
+            <li>
+            Converts .cas (Cassette) data files to .wav to play into a real Color Computer
+            Works well depnding on sound hardware..  Seems to work well on most PCs audio out with sound on very high without distortion..
+            If it don't work on one, try anouther.  Does not seem to work on my Samsung Phones/Tablets.. Maybe sound is not loud enough?
+            Currently no options or validation to keep it as simple as posible..  only supports 9600 bit rate.
+            Not sure other rates would help for other audio hardware? 
+            </li>
+            <li>23-03-15 v1.1 - Added Unzip You can have multiple files in a zip and will list them. Double click to Load.</li>
+            <li>23-03-21 v1.2 - Added Timex/Sinclair ZX81.. .P files..  Yes, my first computer and have one so...</li>
+            <li>23-03-23 v1.3 - Added SHA-1 Checksums.. Can do 256/512 but overkill.. Used to compare files for dups or diffs, wav diffs, debugging.</li> 
+            <li>23-03-29 v1.4 - Added Coco .DSK files.. Does not work with all the other less used dsk formats (DMK, OS9).</li>
+            <li>23-04-06 v1.5 - Enhanced Coco .DSK with 1 or more files for JV1 dsks. You can select the which disk file to convert to .cas.
+                             Added save as .cas</li>
+            
+            <li>23-04-07 v1.51 - Sqashed bug with the checksum!  No more IO error at the end getting exact matches with orginal cas files vs Dsk2Cas.</li>
+            <li>23-04-11 v1.6  - Added View for detokenized Basic files... Not 100% yet.
+                  Also will view other files, but if binary it will show unprintable charaters. Some other files maybe readable text.</li>
+            <li>23-04-19 v1.61 - Fix basic/machine type flag</li>
+            
+        </ul>
+        <footer>
+            <a href="https://gigajunky.github.io/coco/">gigajunky.github.io/coco/</a>
+        </footer>
+    </div>
+    <script src="https://unpkg.com/unzipit@1.4.0/dist/unzipit.js"></script>
+    <script src="index.js"></script>
+    <script src="dsk2cas.js"></script>
+    <script src="cas2wav.js"></script>
+    <script src="basDeTok.js"></script>
+
+</body></html>
