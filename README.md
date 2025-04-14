@@ -29,12 +29,10 @@
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## About CoCoCas2Wav.js
 
-[](https://gigajunky.github.io/coco/)
+https://gigajunky.github.io/coco/
 
 Converts .cas (Cassette) data files to .wav to play into a real Color Computer
 Works well depnding on sound hardware..  Seems to work well on most PCs audio out with sound on very high without distortion..
