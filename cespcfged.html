@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+   <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Coco ESP32 config Editor</title>
+        <style>
+            @import url('https://fonts.cdnfonts.com/css/color-basic');
+            
+            html { font-family: 'Color Basic', sans-serif; font-size: 16px; background: black; color: black }
+            body { background: #95DB54; padding: 0 20px; width: 90%; margin: 0 auto }
+            audio { width: 90% }
+            button, audio, select, input[type="file"]::file-selector-button {
+                background-color:  black; color: white;
+                border: none; border-radius: 4px; padding: 15px 32px; text-align: center;
+                text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px;
+                cursor: pointer; opacity: 0.6; transition: 0.3s;
+            }
+            li { font-family: monospace;}
+
+            button:hover, input[type="file"]::file-selector-button:hover {opacity: 1}
+            table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+            td, th { border: 1px solid #ddd; padding: 8px; text-align: center; }
+            th { background-color: #f2f2f2; }
+            #gamepadIndex, #buttonIndex, #buttonValue { font-weight: bold; }
+            #gamepadIndex { color: blue; }
+            #buttonIndex { color: green; }
+            #buttonValue { color: red; }        
+
+        </style>
+    </head>
+<body>
+  <h2>CocoESP32 Joystick Configurator</h2>
+  <button id="openBtn">Open File</button>
+  <button id="saveBtn" disabled>Save Changes</button>
+
+  <br>
+  <label for="ddLjs">Choose a left Joystick:</label>
+  <select name="ddLjs" id="ddLjs"></select>
+
+ <br>
+  <label for="ddRjs">Choose a Right Joystick:</label>
+  <select name="ddRjs" id="ddRjs"></select>
+
+  <br>File Content (Non-Zero Bytes)<br>
+  <textarea id="log" rows="20" cols="80" placeholder="Open file to see content"></textarea>
+
+<table>
+            <tr>
+                <td>Gamepad Index</td>
+                <td>Button 1</td>
+                <td>Button Value</td>
+            </tr>
+            <tr>
+                <td id="gamepadIndex">-</td>
+                <td id="buttonIndex">-</td>
+                <td id="buttonValue">-</td>
+            </tr>
+        </table>
+
+        <br><br>
+        <textarea id="jslog" rows="3" cols="50"></textarea>
+
+</body>
+<script src="./cespcfg.js"></script>
+  <script>
+
+     /*
+    Mike Horgan BitJunky@hotmail.com 2026-05-04
+    2026-05-09 Seperated cfg and added AliExpress Joystick configs
+    
+    This is a utilty/debuging to edit the Coco ESP32 configuration file. config.ccc or any *.ccc files.
+    I had problems with configuring the ESP32 Joysticks that Cedric help me fix as he has simulated SNES joy pads
+    So I looked into the exact bytes of the binnary file to figure which values were causing the issue be able
+    to configure my Joysticks vs just copying over the file as it does have other settings for the
+    select .DSK 0-4 drives and WIFI and other settings.
+    To use I would recommend backing up your current config file before making changes.
+    Unless you have the same JS as me, this may not help you without adding your own joystick configurations.
+    when it open the config.ccc file it will display the raw no zero bytes and at the end the 
+    left/right joystick configurations bytes.
+    The first 3 are the Dpad X/Y, the middle 8 are zeros, and the last four ore the A/B buttons.
+    The values are shonw in the F12 Menu when edit the Joysticks with the 4/5 options.  
+    When you have your current settings you will need to edit the cfg object to reflect your desired joystick configurations.
+    Download this html file to a place you can edit it easly.. (can be on the CocoESP32 SD card)
+    Edit the cfg object to match your specific joystick configurations.
+    I have integrated some Web Based Joystick Testing you can see the USBid (Vendor and Product IDs) please add that information if possible.
+    You can posting your findings and share settings with the CoCo ESP32 community.
+    Also you can make special setings with your various joyticks and swap or copy to the L/R, and or different buttons configs.
+    Like AB or XY or AY or XB etc.
+    Hope you find this useful.
+    */
+    let fileHandle, byteArray
+    const openBtn = document.getElementById('openBtn')
+    , saveBtn = document.getElementById('saveBtn')
+    , RABtn = document.getElementById('RABtn')
+    , ddLjs = document.getElementById('ddLjs')
+    , ddRjs = document.getElementById('ddRjs')
+     ,   log = document.getElementById('log')
+
+    InitDropDowns()
+    
+    openBtn.addEventListener('click', async () => {
+      try {
+        [fileHandle] = await window.showOpenFilePicker()
+        const file = await fileHandle.getFile()
+        ,   buffer = await file.arrayBuffer()
+    
+        byteArray = new Uint8Array(buffer)
+        CocoESP32Config(byteArray)
+        saveBtn.disabled = false
+      } catch (err) {
+        console.error("File selection cancelled or failed:", err)
+      }
+    })
+    
+    saveBtn.addEventListener('click', async () => {
+      if (!fileHandle) return
+
+      try {
+        const writable = await fileHandle.createWritable()
+         console.log("dd:", ddLjs.selectedIndex, ddRjs.selectedIndex, cfg.joysticks[ddLjs.selectedIndex].esp32, cfg.joysticks[ddRjs.selectedIndex].esp32)
+         if(ddLjs.selectedIndex > 0)
+          byteArray.set(cfg.joysticks[ddLjs.selectedIndex].esp32, cfg.ccc.address.LJS) 
+        if(ddRjs.selectedIndex > 0)
+          byteArray.set(cfg.joysticks[ddRjs.selectedIndex].esp32, cfg.ccc.address.RJS)
+       
+        await writable.write(byteArray)
+        await writable.close()
+        alert("File saved successfully!")
+      } catch (err) {
+        console.error("Save failed:", err)
+      }
+    })
+
+    function InitDropDowns()
+    {
+      ddLjs.options.length = 0
+      ddRjs.options.length = 0
+
+      for (const js of cfg.joysticks) {
+        const opt = document.createElement("option")
+        opt.textContent = js.name
+        ddLjs.appendChild(opt)
+      }
+      for (const js of cfg.joysticks) {
+        const opt = document.createElement("option")
+        opt.textContent = js.name
+        ddRjs.appendChild(opt)
+      }
+    }
+
+    function CocoESP32Config(byteArray)
+    {            
+        console.log(byteArray.length)
+        //const str = new TextDecoder().decode(byteArray.subarray(0,65))
+        //console.log(str)
+        for (let i = 0; i < byteArray.length; i++) {
+            const b = byteArray[i]
+            if(b)
+              log.value += isAscii(b) ? String.fromCharCode(b) : `\n ${i} = ${ b.toString(16).padStart(2, "0") }`
+
+        }
+        const a = cfg.ccc.address
+        , JSL = byteArray.subarray(a.LJS, a.LJS + 16)
+        , JSR = byteArray.subarray(a.RJS, a.RJS + 16)
+        log.value += `\n\n  Left Joystick: ${JSL}\n Right Joystick: ${JSR}` //.toHex()
+        return
+    }
+
+    function isAscii(byte){ return byte > 31 && byte < 127 }
+
+    /* Joystick Tester */
+    const talog = document.getElementById('jslog')
+    
+    window.addEventListener("gamepadconnected", (event) => {
+      
+        const gp = event.gamepad
+
+        , msg = `index ${gp.index}: ${gp.id}. Buttons: ${gp.buttons.length} Axes: ${gp.axes.length}`
+
+        jslog.innerText = `${msg}`
+        console.log(msg)
+     
+        function updateGamepad() {
+            navigator.getGamepads().forEach((cgp, gpi) => {
+                if (cgp) {
+                    cgp.buttons.forEach((button, index) => { if (button.pressed)         PrintGamePadValues(gpi, index, button) })
+                       cgp.axes.forEach((axe, index)    => { if (axe > 0.3 || axe < -0.3)PrintGamePadValues(gpi, index, axe) })
+                }
+            })
+            requestAnimationFrame(updateGamepad)
+        }
+        updateGamepad()
+    })
+
+     let priorJS = -1
+    function PrintGamePadValues(GamePadIndex, index, value)
+    {
+      let cs = index //`${GamePadIndex}:${index}` //:${value.value ? value.value.toFixed(2) : value.toFixed(2)}`
+        if(cs==priorJS) return
+        if(index == 9) return //MS windows bug stuck on 9 Start
+        priorJS = cs
+
+        console.log(`Gamepad ${GamePadIndex} Axis ${index} pressed ${value}`)
+        document.getElementById("gamepadIndex").innerText = GamePadIndex
+        document.getElementById("buttonIndex").innerText = index
+        document.getElementById("buttonValue").innerText = value.value ? value.value.toFixed(2) : value.toFixed(2)
+    }
+
+  </script>
+</html>
